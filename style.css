@@ -836,3 +836,7 @@ th { background: #e0f2fe; color: var(--text); font-weight: 800; }
 @media (max-width: 960px) {
   .purchase-grid { grid-template-columns: 1fr; }
 }
+
+/* Pastikan modal PIN & Wizard sentiasa di lapisan paling atas */
+#pinModal { z-index: 160; }
+#lockoutModal { z-index: 120; }

@@ -116,9 +116,13 @@ async function syncFromCloud(silent = false) {
     if (!res) return;
 
     if (res.notFound || res.suspended) {
-      document.getElementById('lockoutMessage').textContent = res.error || 'Akses kedai disekat.';
-      document.getElementById('lockoutModal').classList.add('open');
       setSyncStatus('offline', '⛔ Disekat');
+      const isPinOpen = document.getElementById('pinModal').classList.contains('open');
+      const isInMaster = document.getElementById('masterView').classList.contains('active');
+      if (!isMasterUnlocked && !isPinOpen && !isInMaster) {
+        document.getElementById('lockoutMessage').textContent = res.error || 'Akses kedai disekat.';
+        document.getElementById('lockoutModal').classList.add('open');
+      }
       return;
     }
 
@@ -1134,7 +1138,7 @@ document.getElementById('generateShopLinkBtn').addEventListener('click', async (
         newShopId: shopCode,
         shopType, shopName, ownerName, phone, expiryDate, ownerPassword
       });
-      if (res && !res.ok) return showToast('❌ ' + (res.error || 'Gagal daftar kedai.'));
+      if (!res || !res.ok) return showToast('❌ ' + ((res && res.error) || 'Gagal simpan ke Google Sheets. Pastikan Code.gs sudah Deploy versi terkini!'));
     } catch (_) {
       return showToast('❌ Gagal sambung Google Sheets.');
     }
@@ -1239,7 +1243,11 @@ updateClock();
 refreshAllUI();
 syncFromCloud(false);
 
-setInterval(() => { if (IS_CLOUD_ENABLED) syncFromCloud(true); }, 15000);
+setInterval(() => {
+  const isPinOpen = document.getElementById('pinModal').classList.contains('open');
+  const isInMaster = document.getElementById('masterView').classList.contains('active');
+  if (IS_CLOUD_ENABLED && !isPinOpen && !isInMaster) syncFromCloud(true);
+}, 15000);
 
 if (INITIAL_MODE === 'pelayan') switchView('waiterView');
 else if (INITIAL_MODE === 'dapur') switchView('kdsView');
@@ -1251,7 +1259,12 @@ if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
 
 document.getElementById('lockoutMasterBtn').addEventListener('click', () => {
   document.getElementById('lockoutModal').classList.remove('open');
-  requireAuth('master', () => switchView('masterView'));
+  requireAuth('master', () => {
+    switchView('masterView');
+    if (CURRENT_SHOP_ID && CURRENT_SHOP_ID !== 'DEMO01') {
+      document.getElementById('newShopCode').value = CURRENT_SHOP_ID;
+    }
+  });
 });
 document.getElementById('lockoutDemoBtn').addEventListener('click', () => {
   window.location.href = window.location.origin + window.location.pathname;
