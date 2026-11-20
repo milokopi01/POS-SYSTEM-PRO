@@ -1,4 +1,4 @@
-const CACHE_NAME = 'universal-pos-3d-saas-v3';
+const CACHE_NAME = 'universal-pos-3d-saas-v4';
 const ASSETS = ['./', './index.html', './style.css', './app.js', './manifest.json'];
 
 self.addEventListener('install', (e) => {

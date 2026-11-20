@@ -173,7 +173,7 @@ function doPost(e) {
 
 function handleGetShopData(shopId) {
   const shops = sheetToObjects(getSheetSafe('Shops'));
-  const shop = shops.find(s => String(s.shopId).toUpperCase() === shopId);
+  const shop = shops.find(s => String(s.shopId || '').trim().toUpperCase() === shopId);
 
   if (!shop) {
     return { ok: false, notFound: true, error: 'Kod Kedai "' + shopId + '" tidak ditemui dalam pangkalan data.' };
@@ -194,7 +194,7 @@ function handleGetShopData(shopId) {
   }
 
   const products = sheetToObjects(getSheetSafe('Products'))
-    .filter(p => String(p.shopId).toUpperCase() === shopId)
+    .filter(p => String(p.shopId || '').trim().toUpperCase() === shopId)
     .map(p => ({
       id: String(p.id),
       barcode: String(p.barcode || ''),
@@ -208,7 +208,7 @@ function handleGetShopData(shopId) {
     }));
 
   const purchases = sheetToObjects(getSheetSafe('Purchases'))
-    .filter(p => String(p.shopId).toUpperCase() === shopId)
+    .filter(p => String(p.shopId || '').trim().toUpperCase() === shopId)
     .map(p => ({
       purchaseNo: String(p.purchaseNo),
       date: String(p.date),
@@ -222,7 +222,7 @@ function handleGetShopData(shopId) {
     .reverse();
 
   const tablesArr = sheetToObjects(getSheetSafe('Tables'))
-    .filter(t => String(t.shopId).toUpperCase() === shopId);
+    .filter(t => String(t.shopId || '').trim().toUpperCase() === shopId);
   const tables = {};
   tablesArr.forEach(t => {
     try {
@@ -235,7 +235,7 @@ function handleGetShopData(shopId) {
   });
 
   const kdsOrders = sheetToObjects(getSheetSafe('KDS'))
-    .filter(k => String(k.shopId).toUpperCase() === shopId && k.status === 'pending')
+    .filter(k => String(k.shopId || '').trim().toUpperCase() === shopId && k.status === 'pending')
     .map(k => ({
       id: String(k.orderId),
       table: String(k.tableName),
@@ -246,7 +246,7 @@ function handleGetShopData(shopId) {
     .reverse();
 
   const sales = sheetToObjects(getSheetSafe('Sales'))
-    .filter(r => String(r.shopId).toUpperCase() === shopId)
+    .filter(r => String(r.shopId || '').trim().toUpperCase() === shopId)
     .map(r => ({
       receiptNo: String(r.receiptNo),
       date: String(r.date),
@@ -339,7 +339,7 @@ function handleRegisterShop(body) {
   const newId = String(body.newShopId || ('KEDAI' + Date.now().toString().slice(-4)))
     .trim().toUpperCase().replace(/[^A-Z0-9_-]/g, '');
 
-  if (shops.some(s => String(s.shopId).toUpperCase() === newId)) {
+  if (shops.some(s => String(s.shopId || '').trim().toUpperCase() === newId)) {
     return { ok: false, error: 'Kod Kedai "' + newId + '" sudah wujud. Sila guna kod lain.' };
   }
 
@@ -375,7 +375,7 @@ function handleUpdateShopStatus(body) {
   }
   const sh = getSheetSafe('Shops');
   const shops = sheetToObjects(sh);
-  const target = shops.find(s => String(s.shopId).toUpperCase() === String(body.targetShopId).toUpperCase());
+  const target = shops.find(s => String(s.shopId || '').trim().toUpperCase() === String(body.targetShopId || '').trim().toUpperCase());
   if (!target) return { ok: false, error: 'Kedai tidak ditemui.' };
 
   if (body.status) sh.getRange(target._row, 7).setValue(body.status);
@@ -387,7 +387,7 @@ function handleUpdateShopStatus(body) {
 function handleSaveSettings(shopId, s) {
   const sh = getSheetSafe('Shops');
   const shops = sheetToObjects(sh);
-  const target = shops.find(x => String(x.shopId).toUpperCase() === shopId);
+  const target = shops.find(x => String(x.shopId || '').trim().toUpperCase() === shopId);
   if (!target) return { ok: false, error: 'Kedai tidak ditemui.' };
 
   const row = target._row;
@@ -411,7 +411,7 @@ function handleSaveSettings(shopId, s) {
 function handleSaveProduct(shopId, p) {
   const sh = getSheetSafe('Products');
   const rows = sheetToObjects(sh);
-  const existing = rows.find(x => String(x.shopId).toUpperCase() === shopId && String(x.id) === String(p.id));
+  const existing = rows.find(x => String(x.shopId || '').trim().toUpperCase() === shopId && String(x.id) === String(p.id));
   const rowVals = [
     shopId, p.id, p.barcode || '', p.name, p.category || 'Umum',
     Number(p.costPrice) || 0, Number(p.price) || 0, Number(p.stock) || 0,
@@ -428,7 +428,7 @@ function handleSaveProduct(shopId, p) {
 function handleDeleteProduct(shopId, productId) {
   const sh = getSheetSafe('Products');
   const rows = sheetToObjects(sh);
-  const target = rows.find(x => String(x.shopId).toUpperCase() === shopId && String(x.id) === String(productId));
+  const target = rows.find(x => String(x.shopId || '').trim().toUpperCase() === shopId && String(x.id) === String(productId));
   if (target) sh.deleteRow(target._row);
   return { ok: true };
 }
@@ -445,7 +445,7 @@ function handleSavePurchase(shopId, pur, stockUpdates) {
     const prodSh = getSheetSafe('Products');
     const prodRows = sheetToObjects(prodSh);
     stockUpdates.forEach(u => {
-      const target = prodRows.find(p => String(p.shopId).toUpperCase() === shopId && String(p.id) === String(u.id));
+      const target = prodRows.find(p => String(p.shopId || '').trim().toUpperCase() === shopId && String(p.id) === String(u.id));
       if (target) {
         if (u.newCostPrice !== undefined) prodSh.getRange(target._row, 6).setValue(u.newCostPrice);
         prodSh.getRange(target._row, 8).setValue(u.newStock);
@@ -458,7 +458,7 @@ function handleSavePurchase(shopId, pur, stockUpdates) {
 function handleSaveTableAndKds(shopId, body) {
   const tblSh = getSheetSafe('Tables');
   const tblRows = sheetToObjects(tblSh);
-  const existing = tblRows.find(t => String(t.shopId).toUpperCase() === shopId && String(t.tableName) === String(body.tableName));
+  const existing = tblRows.find(t => String(t.shopId || '').trim().toUpperCase() === shopId && String(t.tableName) === String(body.tableName));
   const tblVals = [shopId, body.tableName, 'occupied', JSON.stringify(body.items || []), body.time || ''];
   if (existing) tblSh.getRange(existing._row, 1, 1, tblVals.length).setValues([tblVals]);
   else tblSh.appendRow(tblVals);
@@ -471,13 +471,13 @@ function handleSaveTableAndKds(shopId, body) {
 function handleCompleteKds(shopId, orderId, tableName) {
   const kdsSh = getSheetSafe('KDS');
   const kdsRows = sheetToObjects(kdsSh);
-  const target = kdsRows.find(k => String(k.shopId).toUpperCase() === shopId && String(k.orderId) === String(orderId));
+  const target = kdsRows.find(k => String(k.shopId || '').trim().toUpperCase() === shopId && String(k.orderId) === String(orderId));
   if (target) kdsSh.getRange(target._row, 6).setValue('done');
 
   if (tableName) {
     const tblSh = getSheetSafe('Tables');
     const tblRows = sheetToObjects(tblSh);
-    const t = tblRows.find(x => String(x.shopId).toUpperCase() === shopId && String(x.tableName) === String(tableName));
+    const t = tblRows.find(x => String(x.shopId || '').trim().toUpperCase() === shopId && String(x.tableName) === String(tableName));
     if (t) tblSh.getRange(t._row, 3).setValue('billing');
   }
   return { ok: true };
@@ -486,7 +486,7 @@ function handleCompleteKds(shopId, orderId, tableName) {
 function handleClearTable(shopId, tableName) {
   const tblSh = getSheetSafe('Tables');
   const tblRows = sheetToObjects(tblSh);
-  const t = tblRows.find(x => String(x.shopId).toUpperCase() === shopId && String(x.tableName) === String(tableName));
+  const t = tblRows.find(x => String(x.shopId || '').trim().toUpperCase() === shopId && String(x.tableName) === String(tableName));
   if (t) tblSh.deleteRow(t._row);
   return { ok: true };
 }
@@ -508,7 +508,7 @@ function handleSaveSale(shopId, r, stockUpdates) {
     const prodSh = getSheetSafe('Products');
     const prodRows = sheetToObjects(prodSh);
     stockUpdates.forEach(u => {
-      const target = prodRows.find(p => String(p.shopId).toUpperCase() === shopId && String(p.id) === String(u.id));
+      const target = prodRows.find(p => String(p.shopId || '').trim().toUpperCase() === shopId && String(p.id) === String(u.id));
       if (target) prodSh.getRange(target._row, 8).setValue(u.newStock);
     });
   }
@@ -518,7 +518,7 @@ function handleSaveSale(shopId, r, stockUpdates) {
 function handleVoidSale(shopId, receiptNo) {
   const salesSh = getSheetSafe('Sales');
   const rows = sheetToObjects(salesSh);
-  const target = rows.find(r => String(r.shopId).toUpperCase() === shopId && String(r.receiptNo) === String(receiptNo));
+  const target = rows.find(r => String(r.shopId || '').trim().toUpperCase() === shopId && String(r.receiptNo) === String(receiptNo));
   if (target) salesSh.deleteRow(target._row);
   return { ok: true };
 }

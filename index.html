@@ -2,7 +2,7 @@
 <html lang="ms">
 <head>
   <meta charset="UTF-8" />
-  <script>const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzbIq-Oy64e2m34JYv6LubSnJ4LQUve2jj___tMtO3aHEiyk0KhRmsUuMW6sBXI_Je6/exec";</script>
+  <script>const WEB_APP_URL = "MASUKKAN_URL_WEB_APP_GOOGLE_APPS_SCRIPT_ANDA_DI_SINI";</script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Universal POS 3D Pro — Jualan & Belian Stok</title>
   <link rel="manifest" href="manifest.json" />
@@ -594,12 +594,16 @@
     </div>
   </div>
 
-  <!-- MODAL: AKAUN DIGANTUNG -->
+  <!-- MODAL: AKAUN DIGANTUNG / TIDAK DITEMUI -->
   <div class="modal-backdrop" id="lockoutModal">
     <div class="modal-card" style="text-align:center;">
       <h2 style="color:var(--danger);">⛔ Akses Kedai Disekat</h2>
       <p id="lockoutMessage" style="font-size:14px;font-weight:700;color:var(--text);"></p>
-      <small style="color:var(--muted);">Sila hubungi Master Admin / pembekal sistem POS anda.</small>
+      <small style="color:var(--muted);">Sila hubungi Master Admin / pembekal sistem POS anda, atau log masuk sebagai Master Admin untuk mendaftar kod kedai ini.</small>
+      <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:8px;">
+        <button class="btn btn-primary" id="lockoutMasterBtn">🔐 Log Masuk Master Admin</button>
+        <button class="btn btn-outline" id="lockoutDemoBtn">🏠 Kembali ke Laman Utama</button>
+      </div>
     </div>
   </div>
 

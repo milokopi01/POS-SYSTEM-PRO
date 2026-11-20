@@ -1247,3 +1247,12 @@ else if (INITIAL_MODE === 'dapur') switchView('kdsView');
 if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
   navigator.serviceWorker.register('./sw.js').catch(() => {});
 }
+
+
+document.getElementById('lockoutMasterBtn').addEventListener('click', () => {
+  document.getElementById('lockoutModal').classList.remove('open');
+  requireAuth('master', () => switchView('masterView'));
+});
+document.getElementById('lockoutDemoBtn').addEventListener('click', () => {
+  window.location.href = window.location.origin + window.location.pathname;
+});
