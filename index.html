@@ -2,50 +2,56 @@
 <html lang="ms">
 <head>
   <meta charset="UTF-8" />
+  <script>const WEB_APP_URL = "MASUKKAN_URL_WEB_APP_GOOGLE_APPS_SCRIPT_ANDA_DI_SINI";</script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Universal POS Pro — Kaunter & Pelayan</title>
+  <title>Universal POS 3D Pro — Jualan & Belian Stok</title>
   <link rel="manifest" href="manifest.json" />
-  <meta name="theme-color" content="#0284c7" />
+  <meta name="theme-color" content="#38bdf8" />
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <!-- TOP NAVIGATION -->
+  <!-- TOPBAR 3D BIRU CAIR -->
   <header class="topbar">
     <div class="brand">
       <div class="brand-logo">POS</div>
       <div class="brand-info">
-        <h1 id="headerShopName">KEDAI SERBANEKA & KAFE PRO</h1>
+        <h1>
+          <span id="headerShopName">UNIVERSAL POS 3D PRO</span>
+          <span class="shop-pill" id="headerShopId">DEMO01</span>
+          <span class="shop-pill" id="headerShopType" style="background:#dcfce7;color:#15803d;border-color:#86efac;">UNIVERSAL</span>
+        </h1>
         <small id="headerClock">Memuatkan masa...</small>
       </div>
     </div>
 
     <nav class="nav-tabs">
-      <button class="nav-btn active" data-view="posView">🛒 Kaunter POS</button>
-      <button class="nav-btn" data-view="waiterView">🍽️ Mod Pelayan (Meja)</button>
-      <button class="nav-btn" data-view="kdsView">👨‍🍳 Dapur (KDS) <span id="kdsBadge"></span></button>
-      <button class="nav-btn" data-view="reportView">📊 Laporan Jualan</button>
-      <button class="nav-btn" id="openAdminNavBtn">🔐 Master Admin</button>
+      <button class="nav-btn active" data-view="posView">🛒 Jualan (POS)</button>
+      <button class="nav-btn" data-view="waiterView" id="navWaiterBtn">🍽️ Pelayan (Meja)</button>
+      <button class="nav-btn" data-view="kdsView" id="navKdsBtn">👨‍🍳 Dapur (KDS) <span id="kdsBadge"></span></button>
+      <button class="nav-btn" id="openPurchaseNavBtn">📦 Belian Stok</button>
+      <button class="nav-btn" data-view="reportView">📊 Laporan & Untung</button>
+      <button class="nav-btn" id="openOwnerNavBtn">🏪 Urus Kedai</button>
+      <button class="nav-btn" id="openMasterNavBtn">🔐 Master Admin</button>
     </nav>
 
-    <div class="top-actions">
-      <button class="icon-btn" id="toggleThemeBtn" title="Tukar Tema">🌙 Tema</button>
+    <div style="display:flex;align-items:center;gap:8px;">
+      <span id="syncStatusPill" class="sync-pill offline">⚡ Mod Lokal</span>
+      <button class="btn btn-outline" style="padding:7px 11px;font-size:12px;" id="manualSyncBtn" title="Segerak Google Sheets">🔄 Sync</button>
     </div>
   </header>
 
-  <!-- VIEW 1: KAUNTER POS (UNIVERSAL RUNCIT & F&B) -->
+  <!-- VIEW 1: KAUNTER JUALAN (POS) -->
   <main id="posView" class="view-section active">
     <div class="pos-grid">
-      <!-- Left: Product Catalog -->
       <section class="panel">
         <div class="panel-header">
-          <input type="text" id="barcodeSearchInput" class="search-box" placeholder="🔍 Imbas Kod Bar atau cari nama produk / menu..." autocomplete="off" />
+          <input type="text" id="barcodeSearchInput" class="search-box" placeholder="🔍 Imbas Kod Bar atau cari nama produk / menu / servis..." autocomplete="off" />
           <button class="btn btn-outline" id="clearSearchBtn">Padam</button>
         </div>
         <div class="cat-bar" id="categoryBar"></div>
         <div class="product-grid" id="productGrid"></div>
       </section>
 
-      <!-- Right: Active Cart -->
       <section class="panel">
         <div class="cart-context-bar">
           <span id="activeOrderLabel">🛍️ Jualan Kaunter / Walk-In</span>
@@ -55,29 +61,17 @@
         <div class="cart-list" id="cartList"></div>
 
         <div class="cart-summary">
-          <div class="sum-row">
-            <span>Subjumlah</span>
-            <strong id="sumSubtotal">RM 0.00</strong>
-          </div>
+          <div class="sum-row"><span>Subjumlah</span><strong id="sumSubtotal">RM 0.00</strong></div>
           <div class="sum-row">
             <span>Diskaun (RM)</span>
-            <input type="number" id="discountInput" min="0" step="0.50" value="0" style="width:85px;text-align:right;padding:2px 6px;border-radius:6px;border:1px solid var(--border);background:var(--surface);color:var(--text);" />
+            <input type="number" id="discountInput" min="0" step="0.50" value="0" style="width:88px;text-align:right;padding:3px 6px;border-radius:8px;border:1.5px solid #bae6fd;background:#fff;font-weight:700;" />
           </div>
-          <div class="sum-row" id="rowTax">
-            <span id="labelTax">SST (0%)</span>
-            <span id="sumTax">RM 0.00</span>
-          </div>
-          <div class="sum-row" id="rowService">
-            <span id="labelService">Caj Perkhidmatan (0%)</span>
-            <span id="sumService">RM 0.00</span>
-          </div>
-          <div class="sum-row total">
-            <span>JUMLAH</span>
-            <span id="sumGrandTotal">RM 0.00</span>
-          </div>
+          <div class="sum-row"><span id="labelTax">SST (0%)</span><span id="sumTax">RM 0.00</span></div>
+          <div class="sum-row"><span id="labelService">Caj Perkhidmatan (0%)</span><span id="sumService">RM 0.00</span></div>
+          <div class="sum-row total"><span>JUMLAH</span><span id="sumGrandTotal">RM 0.00</span></div>
 
           <div class="cart-actions">
-            <button class="btn btn-warning" id="sendToKitchenBtn">👨‍🍳 Hantar Dapur / Simpan Meja</button>
+            <button class="btn btn-warning" id="sendToKitchenBtn">👨‍🍳 Hantar Dapur / Meja</button>
             <button class="btn btn-danger" id="clearCartBtn">🗑️ Kosongkan</button>
             <button class="btn btn-success btn-full" id="checkoutBtn" style="font-size:15px;padding:13px;">💳 BAYAR & CETAK RESIT</button>
           </div>
@@ -86,40 +80,132 @@
     </div>
   </main>
 
-  <!-- VIEW 2: MOD PELAYAN (WAITER MODE - MEJA) -->
+  <!-- VIEW 2: MOD PELAYAN (F&B / UNIVERSAL) -->
   <section id="waiterView" class="view-section">
     <div class="tables-header">
       <div>
-        <h2>🍽️ Mod Pelayan — Pengurusan Meja Kedai Makan</h2>
-        <small style="color:var(--muted);">Klik mana-mana meja untuk ambil pesanan baru, tambah menu, cetak tiket dapur (KOT), atau bawa ke kaunter bayaran.</small>
+        <h2>🍽️ Mod Pelayan — Pengurusan Meja</h2>
+        <small style="color:var(--muted);font-weight:600;">Pilih meja untuk ambil pesanan, cetak tiket dapur (KOT), atau hantar ke bayaran kaunter.</small>
       </div>
       <div class="legend">
-        <span><i class="dot" style="background:var(--success)"></i>Kosong</span>
-        <span><i class="dot" style="background:var(--warning)"></i>Ada Pesanan</span>
-        <span><i class="dot" style="background:var(--primary)"></i>Sedia Bayar</span>
+        <span><i class="dot" style="background:#10b981"></i>Kosong</span>
+        <span><i class="dot" style="background:#f59e0b"></i>Ada Pesanan</span>
+        <span><i class="dot" style="background:#0284c7"></i>Sedia Bayar</span>
       </div>
     </div>
     <div class="tables-grid" id="tablesGrid"></div>
   </section>
 
-  <!-- VIEW 3: PAPARAN DAPUR (KITCHEN DISPLAY SYSTEM) -->
+  <!-- VIEW 3: DAPUR (KDS) -->
   <section id="kdsView" class="view-section">
     <div class="tables-header">
       <div>
         <h2>👨‍🍳 Paparan Dapur (KDS) — Pesanan Masuk</h2>
-        <small style="color:var(--muted);">Pesanan daripada pelayan atau kaunter akan muncul secara automatik di sini.</small>
+        <small style="color:var(--muted);font-weight:600;">Pesanan daripada pelayan atau kaunter akan muncul secara automatik.</small>
       </div>
-      <button class="btn btn-outline" id="refreshKdsBtn">🔄 Segar Semula</button>
+      <button class="btn btn-primary" id="refreshKdsBtn">🔄 Segar Semula Dapur</button>
     </div>
     <div class="kds-grid" id="kdsGrid"></div>
   </section>
 
-  <!-- VIEW 4: LAPORAN JUALAN -->
+  <!-- VIEW 4: PEMBELIAN STOK (RESTOCK & PEMBEKAL — DILINDUNGI PASSWORD OWNER) -->
+  <section id="purchaseView" class="view-section">
+    <div class="tables-header">
+      <div>
+        <h2>📦 Pembelian Stok Masuk (Restock & Pembekal)</h2>
+        <small style="color:var(--muted);font-weight:600;">Rekod belian daripada pembekal. Kuantiti stok & harga modal produk akan dikemas kini secara automatik.</small>
+      </div>
+      <button class="btn btn-primary" id="exportPurchaseCsvBtn">📥 Eksport Rekod Belian (CSV)</button>
+    </div>
+
+    <div id="lowStockBanner" class="alert-low-stock"></div>
+
+    <div class="purchase-grid">
+      <!-- Borang Rekod Belian Stok -->
+      <div class="card-box">
+        <h3>➕ Rekod Pembelian Stok Baru</h3>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Nama Pembekal / Pemborong</label>
+            <input type="text" id="purSupplier" class="form-control" placeholder="cth: Pemborong Mydin / Kilang ABC" />
+          </div>
+          <div class="form-group">
+            <label>No. Invois / Bil Pembekal</label>
+            <input type="text" id="purRefNo" class="form-control" placeholder="cth: INV-SUP-001" />
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Kaedah Bayaran Pembekal</label>
+            <select id="purPayMethod" class="form-control">
+              <option value="Tunai">Tunai</option>
+              <option value="Pindahan Bank">Pindahan Bank / Online</option>
+              <option value="Hutang / Kredit">Hutang / Kredit (30 Hari)</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Catatan (Pilihan)</label>
+            <input type="text" id="purNotes" class="form-control" placeholder="cth: Stok mingguan" />
+          </div>
+        </div>
+
+        <hr style="border:none;border-top:1.5px solid #e0f2fe;">
+        <div class="form-group">
+          <label>Pilih Produk untuk Tambah Stok</label>
+          <select id="purProductSelect" class="form-control"></select>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Kuantiti Beli (+)</label>
+            <input type="number" id="purQty" class="form-control" min="1" value="10" />
+          </div>
+          <div class="form-group">
+            <label>Harga Modal Seunit (RM)</label>
+            <input type="number" id="purUnitCost" class="form-control" step="0.05" min="0" />
+          </div>
+        </div>
+        <button class="btn btn-primary" id="addPurItemBtn">➕ Masukkan ke Senarai Belian</button>
+
+        <div id="purCartList" style="display:flex;flex-direction:column;gap:6px;max-height:180px;overflow-y:auto;"></div>
+
+        <div style="display:flex;justify-content:space-between;font-size:17px;font-weight:900;color:#0369a1;padding-top:6px;border-top:2px dashed #7dd3fc;">
+          <span>JUMLAH BELIAN STOK:</span>
+          <span id="purGrandTotal">RM 0.00</span>
+        </div>
+        <button class="btn btn-success" id="savePurchaseBtn" style="font-size:14px;padding:12px;">✅ Sahkan Belian & Tambah Stok</button>
+      </div>
+
+      <!-- Sejarah Pembelian Stok -->
+      <div class="card-box">
+        <h3>📜 Sejarah Pembelian Stok & Invois Pembekal</h3>
+        <div class="data-table-wrap" style="max-height:560px;overflow-y:auto;">
+          <table>
+            <thead>
+              <tr>
+                <th>No. Belian</th>
+                <th>Tarikh</th>
+                <th>Pembekal & Rujukan</th>
+                <th>Item Dibeli</th>
+                <th>Bayaran</th>
+                <th>Jumlah Kos</th>
+              </tr>
+            </thead>
+            <tbody id="purchaseHistoryBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- VIEW 5: LAPORAN GABUNGAN JUALAN, BELIAN STOK & UNTUNG -->
   <section id="reportView" class="view-section">
     <div class="tables-header">
-      <h2>📊 Laporan Jualan & Sejarah Resit</h2>
+      <div>
+        <h2>📊 Laporan Bersepadu — Jualan, Belian Stok & Keuntungan</h2>
+        <small style="color:var(--muted);font-weight:600;">Ringkasan prestasi kedai secara masa nyata berdasarkan jualan dan kos modal stok.</small>
+      </div>
       <div style="display:flex;gap:8px;flex-wrap:wrap;">
-        <button class="btn btn-primary" id="exportCsvBtn">📥 Eksport Excel (CSV)</button>
+        <button class="btn btn-primary" id="exportCsvBtn">📥 Eksport Jualan (CSV)</button>
       </div>
     </div>
 
@@ -133,7 +219,8 @@
             <th>Tarikh & Masa</th>
             <th>Jenis / Meja</th>
             <th>Kaedah Bayaran</th>
-            <th>Jumlah (RM)</th>
+            <th>Jualan (RM)</th>
+            <th>Untung Kasar</th>
             <th>Tindakan</th>
           </tr>
         </thead>
@@ -142,26 +229,38 @@
     </div>
   </section>
 
-  <!-- VIEW 5: MASTER ADMIN (PASSWORD PROTECTED: 101010) -->
-  <section id="adminView" class="view-section">
+  <!-- VIEW 6: URUS KEDAI (DILINDUNGI PASSWORD UNIK OWNER KEDAI) -->
+  <section id="ownerView" class="view-section">
     <div class="tables-header">
       <div>
-        <h2>🔐 Panel Tetapan Master Admin</h2>
-        <small style="color:var(--muted);">Akses disahkan. Semua perubahan disimpan secara automatik ke peranti.</small>
+        <h2>🏪 Pengurusan Kedai (Akses Pemilik Kedai)</h2>
+        <small style="color:var(--muted);font-weight:600;">Hanya pemilik kedai dengan kata laluan khas URL kedai ini boleh mengedit tetapan & produk.</small>
       </div>
-      <button class="btn btn-danger" id="lockAdminBtn">🔒 Kunci Semula Admin</button>
+      <button class="btn btn-danger" id="lockOwnerBtn">🔒 Kunci Akses Pemilik</button>
     </div>
 
     <div class="admin-grid">
-      <!-- Profil Kedai & Resit -->
       <div class="card-box">
-        <h3>🏪 Profil Kedai & Tetapan Resit 80mm/58mm</h3>
-        <div class="form-group">
-          <label>Nama Kedai / Restoran</label>
-          <input type="text" id="setShopName" class="form-control" />
+        <h3>⚙️ Profil Kedai & Mod Operasi</h3>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Nama Kedai / Perniagaan</label>
+            <input type="text" id="setShopName" class="form-control" />
+          </div>
+          <div class="form-group">
+            <label>Jenis Kedai (Universal)</label>
+            <select id="setShopType" class="form-control">
+              <option value="UNIVERSAL">Universal (Runcit + Restoran)</option>
+              <option value="FNB">Restoran / Kafe / Kedai Makan</option>
+              <option value="RUNCIT">Kedai Runcit / Mini Market</option>
+              <option value="BUTIK">Butik / Pakaian / Kosmetik</option>
+              <option value="BENGKEL">Bengkel / Servis / Aksesori</option>
+              <option value="FARMASI">Farmasi / Klinik / Kesihatan</option>
+            </select>
+          </div>
         </div>
         <div class="form-group">
-          <label>Alamat Kedai</label>
+          <label>Alamat Kedai (Untuk Resit)</label>
           <input type="text" id="setShopAddress" class="form-control" />
         </div>
         <div class="form-row">
@@ -189,7 +288,7 @@
         </div>
         <div class="form-row">
           <div class="form-group">
-            <label>Bilangan Meja Kedai Makan</label>
+            <label>Bilangan Meja (Jika F&B)</label>
             <input type="number" id="setTableCount" class="form-control" min="1" max="60" />
           </div>
           <div class="form-group">
@@ -198,19 +297,18 @@
           </div>
         </div>
         <div class="form-group">
-          <label>Muat Naik Gambar DuitNow QR Kedai (Pilihan)</label>
+          <label>Muat Naik Gambar DuitNow QR Kedai</label>
           <input type="file" id="setQrUpload" accept="image/*" class="form-control" />
         </div>
         <button class="btn btn-primary" id="saveSettingsBtn">💾 Simpan Tetapan Kedai</button>
       </div>
 
-      <!-- Tambah / Edit Produk -->
       <div class="card-box">
-        <h3>📦 Tambah / Kemas Kini Produk & Menu</h3>
+        <h3>📦 Tambah / Edit Produk, Kos Modal & Harga Jual</h3>
         <input type="hidden" id="prodEditId" />
         <div class="form-group">
-          <label>Nama Produk / Menu</label>
-          <input type="text" id="prodName" class="form-control" placeholder="cth: Nasi Lemak Ayam / Air Mineral 500ml" />
+          <label>Nama Produk / Menu / Servis</label>
+          <input type="text" id="prodName" class="form-control" placeholder="cth: Nasi Lemak / Baju T-Shirt / Minyak Hitam" />
         </div>
         <div class="form-row">
           <div class="form-group">
@@ -219,58 +317,47 @@
           </div>
           <div class="form-group">
             <label>Kategori</label>
-            <input type="text" id="prodCategory" class="form-control" placeholder="Makanan / Minuman / Runcit" />
+            <input type="text" id="prodCategory" class="form-control" placeholder="Makanan / Runcit / Pakaian" />
           </div>
         </div>
         <div class="form-row">
           <div class="form-group">
-            <label>Harga Jualan (RM)</label>
-            <input type="number" id="prodPrice" class="form-control" step="0.10" min="0" />
+            <label>Harga Modal / Beli (RM)</label>
+            <input type="number" id="prodCostPrice" class="form-control" step="0.10" min="0" placeholder="0.00" />
           </div>
           <div class="form-group">
+            <label>Harga Jualan (RM)</label>
+            <input type="number" id="prodPrice" class="form-control" step="0.10" min="0" placeholder="0.00" />
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
             <label>Stok Semasa</label>
-            <input type="number" id="prodStock" class="form-control" min="0" value="99" />
+            <input type="number" id="prodStock" class="form-control" min="0" value="50" />
+          </div>
+          <div class="form-group">
+            <label>Amaran Stok Minimum</label>
+            <input type="number" id="prodMinStock" class="form-control" min="0" value="5" />
           </div>
         </div>
         <div class="form-group">
-          <label>Ikon / Emoji (Pilihan)</label>
-          <input type="text" id="prodIcon" class="form-control" placeholder="🍛 ☕ 🛍️ 🍔" value="📦" />
+          <label>Ikon / Emoji</label>
+          <input type="text" id="prodIcon" class="form-control" value="📦" />
         </div>
         <div style="display:flex;gap:8px;">
           <button class="btn btn-success" style="flex:1;" id="saveProductBtn">➕ Simpan Produk</button>
           <button class="btn btn-outline" id="resetProdFormBtn">Batal</button>
         </div>
-      </div>
-
-      <!-- Keselamatan & Sandaran Data -->
-      <div class="card-box">
-        <h3>🛡️ Keselamatan, Sandaran & Cloud Sync</h3>
-        <div class="form-group">
-          <label>Tukar Kata Laluan Master Admin (Lalai: 101010)</label>
-          <div style="display:flex;gap:6px;">
-            <input type="password" id="newAdminPass" class="form-control" style="flex:1;" placeholder="Kata laluan baru" />
-            <button class="btn btn-warning" id="changePassBtn">Tukar</button>
-          </div>
-        </div>
-        <div class="form-group">
-          <label>URL Google Apps Script Sync (Pilihan untuk Multi-Peranti)</label>
-          <input type="url" id="setSyncUrl" class="form-control" placeholder="https://script.google.com/macros/s/.../exec" />
-          <small style="color:var(--muted);font-size:11px;">Biarkan kosong untuk kegunaan 100% luar talian (offline).</small>
-        </div>
-        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:6px;">
-          <button class="btn btn-primary" id="exportBackupBtn">⬇️ Muat Turun Backup (JSON)</button>
-          <label class="btn btn-outline" style="cursor:pointer;">
-            ⬆️ Pulihkan Backup
-            <input type="file" id="importBackupInput" accept=".json" hidden />
-          </label>
-          <button class="btn btn-danger" id="factoryResetBtn">⚠️ Reset Data Kilang</button>
+        <hr style="border:none;border-top:1px solid #bae6fd;margin:4px 0;">
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <button class="btn btn-outline" id="exportBackupBtn">⬇️ Backup JSON</button>
+          <label class="btn btn-outline" style="cursor:pointer;">⬆️ Pulihkan JSON <input type="file" id="importBackupInput" accept=".json" hidden /></label>
         </div>
       </div>
     </div>
 
-    <!-- Senarai Produk -->
-    <div class="card-box" style="margin-top:14px;">
-      <h3>📋 Senarai Semua Produk & Inventori</h3>
+    <div class="card-box" style="margin-top:16px;">
+      <h3>📋 Senarai Inventori Produk (Modal vs Jualan vs Stok)</h3>
       <div class="data-table-wrap">
         <table>
           <thead>
@@ -279,7 +366,8 @@
               <th>Nama Produk</th>
               <th>Kod Bar</th>
               <th>Kategori</th>
-              <th>Harga (RM)</th>
+              <th>Modal (RM)</th>
+              <th>Jualan (RM)</th>
               <th>Stok</th>
               <th>Tindakan</th>
             </tr>
@@ -290,12 +378,153 @@
     </div>
   </section>
 
-  <!-- MODAL: MASTER ADMIN PASSWORD (101010) -->
+  <!-- VIEW 7: MASTER ADMIN SAAS (HANYA PASSWORD 101010) -->
+  <section id="masterView" class="view-section">
+    <div class="tables-header">
+      <div>
+        <h2>🔐 Panel Master Admin (Jualan App Seluruh Malaysia)</h2>
+        <small style="color:var(--muted);font-weight:600;">Jana URL kedai baharu berserta kata laluan pemilik secara automatik atau manual.</small>
+      </div>
+      <button class="btn btn-danger" id="lockMasterBtn">🔒 Kunci Master Admin</button>
+    </div>
+
+    <div class="admin-grid">
+      <div class="card-box">
+        <h3>🚀 Daftar Kedai Baru & Jana URL + Password Owner</h3>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Kod Unik Kedai (cth: KEDAI01)</label>
+            <input type="text" id="newShopCode" class="form-control" placeholder="Kosong = Auto" />
+          </div>
+          <div class="form-group">
+            <label>Jenis Perniagaan</label>
+            <select id="newShopType" class="form-control">
+              <option value="UNIVERSAL">Universal (Runcit + F&B)</option>
+              <option value="FNB">Restoran / Kafe / Kedai Makan</option>
+              <option value="RUNCIT">Kedai Runcit / Mini Market</option>
+              <option value="BUTIK">Butik / Pakaian / Kosmetik</option>
+              <option value="BENGKEL">Bengkel / Servis / Alat Ganti</option>
+              <option value="FARMASI">Farmasi / Kesihatan</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Nama Kedai Pelanggan</label>
+            <input type="text" id="newShopName" class="form-control" placeholder="cth: Pasar Mini Makmur" />
+          </div>
+          <div class="form-group">
+            <label>Nama Pemilik</label>
+            <input type="text" id="newShopOwner" class="form-control" placeholder="cth: Pn. Aminah" />
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>No. WhatsApp Pemilik</label>
+            <input type="text" id="newShopPhone" class="form-control" placeholder="cth: 60123456789" />
+          </div>
+          <div class="form-group">
+            <label>Tarikh Tamat Langganan</label>
+            <input type="date" id="newShopExpiry" class="form-control" />
+          </div>
+        </div>
+
+        <!-- Tetapan Password Owner: Auto atau Manual -->
+        <div class="form-group">
+          <label>Kata Laluan Pemilik Kedai (Untuk Edit Kedai & Belian Stok)</label>
+          <div class="pass-toggle-group">
+            <button type="button" class="pass-radio-btn active" id="passModeAutoBtn">🎲 Jana Automatik</button>
+            <button type="button" class="pass-radio-btn" id="passModeManualBtn">⌨️ Tetapan Manual</button>
+          </div>
+          <div style="display:flex;gap:6px;">
+            <input type="text" id="newShopOwnerPass" class="form-control" style="flex:1;font-weight:900;letter-spacing:2px;" readonly />
+            <button type="button" class="btn btn-outline" id="regenPassBtn" style="padding:8px 12px;">🔄 Jana Baru</button>
+          </div>
+        </div>
+
+        <button class="btn btn-success" id="generateShopLinkBtn" style="font-size:14px;padding:12px;">🚀 Daftar ke Google Sheets & Jana URL + Password</button>
+
+        <div id="generatedLinkResult" class="link-box" style="display:none;">
+          <strong style="color:#0369a1;">✅ URL & Kata Laluan Pemilik Siap Dijana:</strong>
+          <div style="font-size:13px;font-weight:800;color:#047857;">🔑 Password Edit Pemilik: <span id="resOwnerPass" style="background:#dcfce7;padding:2px 8px;border-radius:6px;"></span></div>
+          <label style="font-size:11px;font-weight:800;">Link Utama POS & Setup Kedai:</label>
+          <div class="link-url-text" id="resMainLink"></div>
+          <div id="resFnbLinksWrap">
+            <label style="font-size:11px;font-weight:800;">Link Telefon Pelayan (Waiter):</label>
+            <div class="link-url-text" id="resWaiterLink"></div>
+            <label style="font-size:11px;font-weight:800;margin-top:4px;display:block;">Link Skrin Dapur (KDS):</label>
+            <div class="link-url-text" id="resKdsLink"></div>
+          </div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:4px;">
+            <button class="btn btn-primary" id="copyMainLinkBtn">📋 Salin Mesej & Link</button>
+            <button class="btn btn-success" id="whatsappLinkBtn">💬 Hantar ke WhatsApp</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="card-box">
+        <h3>🏢 Senarai Semua Kedai Berdaftar (Google Sheets)</h3>
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <small style="color:var(--muted);font-weight:600;">Lihat kata laluan pemilik, salin link, atau gantung akses kedai.</small>
+          <button class="btn btn-outline" style="padding:6px 10px;font-size:12px;" id="refreshShopsBtn">🔄 Muat Semula</button>
+        </div>
+        <div class="data-table-wrap" style="max-height:480px;overflow-y:auto;">
+          <table>
+            <thead>
+              <tr>
+                <th>Kod & Jenis</th>
+                <th>Nama Kedai</th>
+                <th>Pass Owner</th>
+                <th>Status</th>
+                <th>Tindakan</th>
+              </tr>
+            </thead>
+            <tbody id="saasShopsTable">
+              <tr><td colspan="5" style="text-align:center;color:var(--muted);">Klik "Muat Semula" untuk papar senarai kedai.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- MODAL: WIZARD SETUP PANTAS KEDAI BARU (MEMERLUKAN PASSWORD OWNER) -->
+  <div class="modal-backdrop" id="setupWizardModal">
+    <div class="modal-card">
+      <h3 style="text-align:center;color:#0369a1;">🎉 Selamat Datang — Setup Kedai Baru</h3>
+      <p style="text-align:center;font-size:12.5px;color:var(--muted);font-weight:600;">Masukkan Password Pemilik yang diberikan oleh pembekal untuk mengesahkan dan mengedit maklumat kedai anda.</p>
+      <div class="form-group">
+        <label>🔑 Password Pemilik Kedai (Wajib untuk Edit)</label>
+        <input type="password" id="wizOwnerPass" class="form-control" placeholder="Masukkan kata laluan URL kedai ini" />
+      </div>
+      <div class="form-group">
+        <label>Nama Kedai / Perniagaan</label>
+        <input type="text" id="wizShopName" class="form-control" />
+      </div>
+      <div class="form-group">
+        <label>Alamat Kedai (Untuk Resit)</label>
+        <input type="text" id="wizShopAddress" class="form-control" placeholder="Alamat penuh kedai" />
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>No. Telefon Kedai</label>
+          <input type="text" id="wizShopPhone" class="form-control" />
+        </div>
+        <div class="form-group">
+          <label>Bilangan Meja (Jika F&B)</label>
+          <input type="number" id="wizTableCount" class="form-control" value="12" min="1" max="60" />
+        </div>
+      </div>
+      <button class="btn btn-success" id="finishSetupBtn" style="font-size:14px;padding:12px;">✅ Sahkan Password & Mula Guna POS</button>
+    </div>
+  </div>
+
+  <!-- MODAL: PENGESAHAN PASSWORD (DINAMIK: OWNER KEDAI ATAU MASTER ADMIN) -->
   <div class="modal-backdrop" id="pinModal">
     <div class="modal-card">
-      <h3 style="text-align:center;">🔐 Pengesahan Master Admin</h3>
-      <p style="text-align:center;font-size:12px;color:var(--muted);">Masukkan kata laluan Master Admin untuk akses tetapan penuh.</p>
-      <input type="password" id="pinDisplay" class="form-control" style="text-align:center;font-size:22px;letter-spacing:6px;font-weight:800;" placeholder="••••••" />
+      <h3 id="pinModalTitle" style="text-align:center;color:#0369a1;">🔐 Pengesahan Kata Laluan</h3>
+      <p id="pinModalSubtitle" style="text-align:center;font-size:12px;color:var(--muted);font-weight:600;"></p>
+      <input type="password" id="pinDisplay" class="form-control" style="text-align:center;font-size:22px;letter-spacing:5px;font-weight:900;" placeholder="••••••" />
       <div class="numpad" id="adminNumpad">
         <button data-key="1">1</button><button data-key="2">2</button><button data-key="3">3</button>
         <button data-key="4">4</button><button data-key="5">5</button><button data-key="6">6</button>
@@ -306,26 +535,24 @@
     </div>
   </div>
 
-  <!-- MODAL: PEMBAYARAN (CHECKOUT) -->
+  <!-- MODAL: PEMBAYARAN -->
   <div class="modal-backdrop" id="payModal">
     <div class="modal-card">
-      <h3>💳 Pembayaran Pelanggan</h3>
-      <div style="background:var(--surface-2);padding:12px;border-radius:10px;text-align:center;">
-        <small style="color:var(--muted);">JUMLAH PERLU DIBAYAR</small>
-        <h2 id="payModalTotal" style="font-size:28px;color:var(--primary);">RM 0.00</h2>
+      <h3 style="color:#0369a1;">💳 Pembayaran Pelanggan</h3>
+      <div style="background:#e0f2fe;padding:14px;border-radius:14px;text-align:center;border:1.5px solid #7dd3fc;">
+        <small style="color:#0369a1;font-weight:800;">JUMLAH PERLU DIBAYAR</small>
+        <h2 id="payModalTotal" style="font-size:30px;color:#0c4a6e;font-weight:900;">RM 0.00</h2>
       </div>
-
       <div class="pay-methods">
         <button class="pay-method-btn active" data-method="Tunai">💵 Tunai</button>
         <button class="pay-method-btn" data-method="QR Pay / DuitNow">📱 QR / DuitNow</button>
         <button class="pay-method-btn" data-method="Kad Debit/Kredit">💳 Kad</button>
         <button class="pay-method-btn" data-method="E-Wallet">📲 E-Wallet</button>
       </div>
-
       <div id="cashSection">
         <div class="form-group">
           <label>Wang Diterima (RM)</label>
-          <input type="number" id="cashReceivedInput" class="form-control" step="0.10" style="font-size:18px;font-weight:800;" />
+          <input type="number" id="cashReceivedInput" class="form-control" step="0.10" style="font-size:19px;font-weight:900;" />
         </div>
         <div class="quick-cash" style="margin-top:8px;">
           <button data-cash="exact">Tepat</button>
@@ -335,18 +562,16 @@
           <button data-cash="50">RM 50</button>
           <button data-cash="100">RM 100</button>
         </div>
-        <div style="margin-top:10px;display:flex;justify-content:space-between;font-size:16px;font-weight:800;">
+        <div style="margin-top:10px;display:flex;justify-content:space-between;font-size:17px;font-weight:900;">
           <span>Baki Pelanggan:</span>
-          <span id="cashChangeDisplay" style="color:var(--success);">RM 0.00</span>
+          <span id="cashChangeDisplay" style="color:var(--success-deep);">RM 0.00</span>
         </div>
       </div>
-
       <div id="qrPreviewSection" style="display:none;text-align:center;">
-        <p style="font-size:12px;color:var(--muted);margin-bottom:6px;">Imbas QR di bawah untuk pembayaran tanpa tunai:</p>
-        <img id="shopQrImage" alt="QR Kedai" style="max-width:200px;border-radius:10px;border:1px solid var(--border);display:none;margin:0 auto;" />
-        <p id="noQrMsg" style="font-size:12px;color:var(--warning);">Tiada gambar QR dimuat naik. Anda boleh muat naik gambar DuitNow QR di Master Admin.</p>
+        <p style="font-size:12px;color:var(--muted);margin-bottom:6px;">Imbas DuitNow QR kedai untuk bayaran:</p>
+        <img id="shopQrImage" alt="QR Kedai" style="max-width:200px;border-radius:12px;border:2px solid #7dd3fc;display:none;margin:0 auto;" />
+        <p id="noQrMsg" style="font-size:12px;color:#b45309;font-weight:700;">Tiada gambar QR dimuat naik. Muat naik di Urus Kedai.</p>
       </div>
-
       <div style="display:flex;gap:8px;margin-top:6px;">
         <button class="btn btn-success" style="flex:1;" id="confirmPayBtn">✅ Sahkan & Cetak Resit</button>
         <button class="btn btn-outline" id="closePayModalBtn">Batal</button>
@@ -354,11 +579,11 @@
     </div>
   </div>
 
-  <!-- MODAL: PILIHAN MEJA (MOD PELAYAN) -->
+  <!-- MODAL: PILIHAN MEJA -->
   <div class="modal-backdrop" id="tableActionModal">
     <div class="modal-card">
-      <h3 id="tableModalTitle">🍽️ Meja 1</h3>
-      <div id="tableModalSummary" style="font-size:13px;color:var(--muted);"></div>
+      <h3 id="tableModalTitle" style="color:#0369a1;">🍽️ Meja 1</h3>
+      <div id="tableModalSummary" style="font-size:13px;color:var(--muted);font-weight:600;"></div>
       <div style="display:flex;flex-direction:column;gap:8px;">
         <button class="btn btn-primary" id="tableTakeOrderBtn">📝 Ambil / Tambah Pesanan</button>
         <button class="btn btn-warning" id="tablePrintKotBtn">🖨️ Cetak Tiket Dapur (KOT)</button>
@@ -369,10 +594,16 @@
     </div>
   </div>
 
-  <!-- THERMAL RECEIPT PRINT CONTAINER -->
-  <div id="printArea"></div>
+  <!-- MODAL: AKAUN DIGANTUNG -->
+  <div class="modal-backdrop" id="lockoutModal">
+    <div class="modal-card" style="text-align:center;">
+      <h2 style="color:var(--danger);">⛔ Akses Kedai Disekat</h2>
+      <p id="lockoutMessage" style="font-size:14px;font-weight:700;color:var(--text);"></p>
+      <small style="color:var(--muted);">Sila hubungi Master Admin / pembekal sistem POS anda.</small>
+    </div>
+  </div>
 
-  <!-- TOAST -->
+  <div id="printArea"></div>
   <div id="toast" class="toast"></div>
 
   <script src="app.js"></script>

@@ -1,30 +1,17 @@
-const CACHE_NAME = 'universal-pos-pro-v1';
-const ASSETS = [
-  './',
-  './index.html',
-  './style.css',
-  './app.js',
-  './manifest.json'
-];
+const CACHE_NAME = 'universal-pos-3d-saas-v3';
+const ASSETS = ['./', './index.html', './style.css', './app.js', './manifest.json'];
 
-self.addEventListener('install', (event) => {
-  event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(ASSETS))
-  );
+self.addEventListener('install', (e) => {
+  e.waitUntil(caches.open(CACHE_NAME).then((c) => c.addAll(ASSETS)));
   self.skipWaiting();
 });
 
-self.addEventListener('activate', (event) => {
-  event.waitUntil(
-    caches.keys().then((keys) =>
-      Promise.all(keys.filter((k) => k !== CACHE_NAME).map((k) => caches.delete(k)))
-    )
-  );
+self.addEventListener('activate', (e) => {
+  e.waitUntil(caches.keys().then((ks) => Promise.all(ks.filter((k) => k !== CACHE_NAME).map((k) => caches.delete(k)))));
   self.clients.claim();
 });
 
-self.addEventListener('fetch', (event) => {
-  event.respondWith(
-    caches.match(event.request).then((cached) => cached || fetch(event.request))
-  );
+self.addEventListener('fetch', (e) => {
+  if (e.request.url.includes('script.google.com')) return;
+  e.respondWith(caches.match(e.request).then((c) => c || fetch(e.request)));
 });
